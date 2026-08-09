@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>asd — a search-result circulation agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:      #ECE3CC;
+    --paper-dark: #DFD3B0;
+    --ink:        #23281F;
+    --ink-soft:   #4B5142;
+    --stamp-red:  #93362E;
+    --brass:      #A9843F;
+    --sage:       #5F7A5E;
+    --card-shadow: 0 1px 0 rgba(35,40,31,0.15), 0 8px 18px rgba(35,40,31,0.12);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at top left, rgba(169,132,63,0.10), transparent 55%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:16px;
+    line-height:1.6;
+  }
+  ::selection{background:var(--stamp-red); color:var(--paper);}
+
+  a{color:var(--stamp-red);}
+
+  .rule{
+    height:1px;
+    background:repeating-linear-gradient(90deg, var(--ink-soft) 0 6px, transparent 6px 11px);
+    opacity:0.5;
+    margin:0;
+  }
+
+  header{
+    max-width:920px;
+    margin:0 auto;
+    padding:72px 28px 40px;
+  }
+  .eyebrow{
+    font-family:'Special Elite', monospace;
+    font-size:12.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--brass);
+  }
+  h1{
+    font-family:'Special Elite', monospace;
+    font-weight:400;
+    font-size:clamp(2.4rem, 6vw, 4.1rem);
+    line-height:1.02;
+    letter-spacing:-0.01em;
+    margin:10px 0 18px;
+    color:var(--ink);
+  }
+  .dek{
+    font-family:'IBM Plex Serif', serif;
+    font-style:italic;
+    font-size:1.2rem;
+    max-width:52ch;
+    color:var(--ink-soft);
+    margin:0 0 30px;
+  }
+  .badges{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px;}
+  .badge{
+    font-size:11.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    border:1px solid var(--ink);
+    padding:4px 9px;
+    border-radius:2px;
+    color:var(--ink-soft);
+  }
+  .badge.hot{border-color:var(--stamp-red); color:var(--stamp-red);}
+
+  /* ---- Catalog card (hero signature) ---- */
+  .catalog-wrap{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 28px 64px;
+  }
+  .catalog-card{
+    position:relative;
+    background:
+      linear-gradient(var(--paper-dark), var(--paper-dark)) padding-box,
+      var(--paper);
+    border:1px solid var(--ink);
+    box-shadow:var(--card-shadow);
+    padding:26px 26px 18px;
+    overflow:hidden;
+  }
+  .catalog-card::before{
+    content:"";
+    position:absolute;
+    left:74px; top:0; bottom:0;
+    width:1px;
+    background:rgba(147,54,46,0.35);
+  }
+  .catalog-card::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; top:34px;
+    height:1px;
+    background:repeating-linear-gradient(90deg, transparent 0 8px, rgba(75,81,66,0.35) 8px 9px);
+  }
+  .catalog-row{
+    display:grid;
+    grid-template-columns:82px 1fr auto;
+    gap:0 16px;
+    padding:9px 0 9px 0;
+    font-size:13.5px;
+    align-items:baseline;
+    border-bottom:1px dashed rgba(75,81,66,0.28);
+  }
+  .catalog-row:first-of-type{padding-top:16px;}
+  .catalog-row:last-of-type{border-bottom:none;}
+  .catalog-row .no{color:var(--brass); font-weight:600;}
+  .catalog-row .url{color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .stamp{
+    font-family:'Special Elite', monospace;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    color:var(--stamp-red);
+    border:1.5px solid var(--stamp-red);
+    padding:2px 6px;
+    border-radius:3px;
+    transform:rotate(-3deg);
+    white-space:nowrap;
+    opacity:0;
+    animation:stampIn 0.4s ease-out forwards;
+  }
+  @keyframes stampIn{
+    0%{opacity:0; transform:rotate(-3deg) scale(1.6); filter:blur(1px);}
+    60%{opacity:1;}
+    100%{opacity:1; transform:rotate(-3deg) scale(1);}
+  }
+  .catalog-row:nth-child(1) .stamp{animation-delay:0.15s;}
+  .catalog-row:nth-child(2) .stamp{animation-delay:0.45s;}
+  .catalog-row:nth-child(3) .stamp{animation-delay:0.75s;}
+  .catalog-row:nth-child(4) .stamp{animation-delay:1.05s;}
+  .catalog-row:nth-child(5) .stamp{animation-delay:1.35s;}
+  .catalog-caption{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:11px; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--ink-soft); padding-top:14px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .stamp{animation:none; opacity:1;}
+  }
+  @media (max-width:520px){
+    .catalog-row{grid-template-columns:52px 1fr; }
+    .catalog-row .stamp{grid-column:1/-1; margin-top:4px; justify-self:start;}
+  }
+
+  main{max-width:920px; margin:0 auto; padding:0 28px 40px;}
+
+  section{padding:44px 0;}
+  section + section{border-top:1px solid rgba(35,40,31,0.14);}
+
+  .section-label{
+    font-family:'Special Elite', monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--brass);
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:16px;
+  }
+  .section-label::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:repeating-linear-gradient(90deg, var(--brass) 0 4px, transparent 4px 8px);
+    opacity:0.6;
+  }
+  h2{
+    font-family:'IBM Plex Serif', serif;
+    font-weight:600;
+    font-size:1.5rem;
+    margin:0 0 14px;
+  }
+  p{margin:0 0 14px; color:var(--ink);}
+  .lede{font-size:1.05rem; max-width:62ch;}
+
+  .field-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px,1fr));
+    gap:14px;
+    margin-top:6px;
+  }
+  .field{
+    border:1px solid rgba(35,40,31,0.35);
+    background:rgba(255,255,255,0.28);
+    padding:14px 16px;
+  }
+  .field .k{
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--sage); margin-bottom:6px;
+  }
+  .field .v{font-size:13.5px; color:var(--ink);}
+
+  ol.steps{list-style:none; margin:0; padding:0; counter-reset:step;}
+  ol.steps li{
+    counter-increment:step;
+    display:grid;
+    grid-template-columns:34px 1fr;
+    gap:12px;
+    padding:10px 0;
+    font-size:14.5px;
+  }
+  ol.steps li::before{
+    content:counter(step);
+    font-family:'Special Elite', monospace;
+    color:var(--stamp-red);
+    border:1px solid var(--stamp-red);
+    width:26px; height:26px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%;
+    font-size:12px;
+  }
+
+  .rules{list-style:none; margin:0; padding:0;}
+  .rules li{
+    position:relative;
+    padding:9px 0 9px 22px;
+    font-size:14px;
+    border-bottom:1px dashed rgba(75,81,66,0.28);
+  }
+  .rules li:last-child{border-bottom:none;}
+  .rules li::before{
+    content:"—";
+    position:absolute; left:0; color:var(--brass);
+  }
+
+  code, .code{
+    font-family:'IBM Plex Mono', monospace;
+    background:rgba(35,40,31,0.06);
+    border:1px solid rgba(35,40,31,0.16);
+    padding:1px 6px;
+    border-radius:3px;
+    font-size:0.92em;
+  }
+
+  pre{
+    background:#1E231C;
+    color:#DCE6D6;
+    border:1px solid var(--ink);
+    padding:18px 20px;
+    overflow-x:auto;
+    font-size:12.8px;
+    line-height:1.7;
+    box-shadow:var(--card-shadow);
+  }
+  pre .c1{color:#9BB89A;}
+
+  .cta-row{
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+    margin-top:8px;
+  }
+  .btn{
+    font-family:'Special Elite', monospace;
+    font-size:13px;
+    letter-spacing:0.04em;
+    text-decoration:none;
+    color:var(--paper);
+    background:var(--ink);
+    padding:11px 18px;
+    border:1px solid var(--ink);
+    display:inline-flex; align-items:center; gap:8px;
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .btn:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(35,40,31,0.25);}
+  .btn.outline{
+    background:transparent; color:var(--ink);
+  }
+  .btn:focus-visible{outline:2px solid var(--stamp-red); outline-offset:2px;}
+
+  footer{
+    max-width:920px; margin:0 auto; padding:30px 28px 80px;
+    font-size:12px; color:var(--ink-soft);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">fitzyracing1 / asd — skill card no. 001</div>
+  <h1>asd circulates<br>what you've already found.</h1>
+  <p class="dek">A search-result circulation agent. Every page it fetches gets checked into a cache; every page it loads gets stamped into a visit log. Nothing gets searched for twice.</p>
+  <div class="badges">
+    <span class="badge hot">skill</span>
+    <span class="badge">result_cache</span>
+    <span class="badge">visit_log</span>
+    <span class="badge">no re-search on hit</span>
+  </div>
+</header>
+
+<div class="catalog-wrap">
+  <div class="catalog-card">
+    <div class="catalog-row"><span class="no">01</span><span class="url">docs.python.org/asyncio</span><span class="stamp">CACHED</span></div>
+    <div class="catalog-row"><span class="no">02</span><span class="url">news.ycombinator.com/item?id=…</span><span class="stamp">CACHED</span></div>
+    <div class="catalog-row"><span class="no">03</span><span class="url">arxiv.org/abs/2406.…</span><span class="stamp">LOADED</span></div>
+    <div class="catalog-row"><span class="no">04</span><span class="url">github.com/fitzyracing1/asd</span><span class="stamp">CACHED</span></div>
+    <div class="catalog-row"><span class="no">05</span><span class="url">en.wikipedia.org/wiki/…</span><span class="stamp">LOADED</span></div>
+    <div class="catalog-caption">
+      <span>result_cache — deduped by url</span>
+      <span>visit_log — appended on load</span>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <section id="what">
+    <div class="section-label">what it does</div>
+    <p class="lede">asd sits between a search call and a fetch call. When a search runs, all ten results are checked into a cache instead of being discarded at the end of the turn. When a page is loaded, asd stamps it into an ordered visit log and serves it from cache if it's already there — full content, not just the snippet, once fetched once.</p>
+    <div class="field-grid">
+      <div class="field">
+        <div class="k">result_cache</div>
+        <div class="v">{url, title, snippet, query, fetched_at, visit_count}</div>
+      </div>
+      <div class="field">
+        <div class="k">visit_log</div>
+        <div class="v">ordered list of urls, appended on every load</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="section-label">how it runs</div>
+    <h2>On each search query</h2>
+    <ol class="steps">
+      <li>Run a search, get up to ten results.</li>
+      <li>Check each new url into <code>result_cache</code> — duplicates by url are skipped.</li>
+      <li>Return the ten results to the caller as usual.</li>
+    </ol>
+    <h2 style="margin-top:28px;">On each load trigger</h2>
+    <ol class="steps">
+      <li>Increment that url's visit count; append it to <code>visit_log</code>.</li>
+      <li>Fetch full content if it isn't cached yet — otherwise serve the cached copy.</li>
+      <li>Return the page content plus its position in <code>visit_log</code>.</li>
+    </ol>
+  </section>
+
+  <section id="rules">
+    <div class="section-label">house rules</div>
+    <ul class="rules">
+      <li>A cached url is never re-searched — served from cache unless a refresh is explicitly requested.</li>
+      <li>Cache entries expire after a caller-set window; expired entries are re-fetched on next visit, never dropped from <code>visit_log</code>.</li>
+      <li><code>visit_log</code> is the record of order — "which page came third" is a visit-log question, not a search-rank question.</li>
+      <li><code>result_cache</code> is the record of content.</li>
+    </ul>
+  </section>
+
+  <section id="use">
+    <div class="section-label">skill definition</div>
+    <p>Drop this in as <code>SKILL.md</code> to give an agent the full behavior directly.</p>
+    <pre><span class="c1">---
+name: asd
+description: Search-result circulation agent that caches all results from a
+web search and serves cached page content on later "load" requests instead
+of re-searching. Use when the user wants to avoid re-running identical
+searches, wants a persistent cache of search results across a session, or
+explicitly invokes "asd."
+---</span>
+
+# asd
+
+A search-result circulation agent.
+
+## State (persisted across calls)
+- result_cache: list of {url, title, snippet, query, fetched_at, visit_count}
+- visit_log: ordered list of urls, appended each time a page is loaded
+
+## On each search query
+1. Run web_search, get up to 10 results.
+2. Check each new result into result_cache (dedup by url).
+3. Return the fresh 10 results to the caller as usual.
+
+## On each "load" trigger
+1. Increment visit_count for the requested url; append url to visit_log.
+2. Fetch full content if not cached, or serve from result_cache.
+3. Return that page's content plus its position in visit_log.</pre>
+    <div class="cta-row">
+      <a class="btn" href="https://github.com/fitzyracing1/asd/blob/main/SKILL.md">Read SKILL.md →</a>
+      <a class="btn outline" href="https://github.com/fitzyracing1/asd">View repository</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>asd — search-result circulation agent</span>
+  <span>fitzyracing1/asd</span>
+</footer>
+
+</body>
+</html>
